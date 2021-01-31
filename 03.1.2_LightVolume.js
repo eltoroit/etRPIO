@@ -1,11 +1,5 @@
 const rpio = require('rpio');
 const { Pins } = require('./pins');
-const readline = require("readline");
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
 
 let LEDs = [
     Pins.WPi_2_Physical(0),
@@ -20,7 +14,6 @@ let LEDs = [
     Pins.WPi_2_Physical(10)
 ];
 
-let i = 0;
 console.log("Program is starting");
 LEDs.forEach(LED => {
     rpio.open(LED, rpio.OUTPUT, rpio.HIGH);
