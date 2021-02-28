@@ -4,7 +4,8 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"Run sampleRPIO": "node Sample_RPIO.js",
+		"Current Project": "sudo node 04.1.1_BreathingLED.js",
+		"sampleRPIO": "node Sample_RPIO.js",
 		"Run samplePIGPIO": "sudo node Sample_PIGPIO.js",
 		"Debug samplePIGPIO": "sudo node inspect Sample_PIGPIO.js"
 	},

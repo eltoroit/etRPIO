@@ -24,8 +24,6 @@ let clockDivider = 8;
 // This is the frequency at which the value gets updated... Not the frequency at which the data changes. If the value changes slower, then the same value is put out on the line.
 
 let pin = Pins.WPi_2_Physical(1);
-// This helps me troubleshoot the code in VS Code in Mac since I was not able to figure out how to debug with sudo which is required.
-// rpio.init({ gpiomem: false, mock: 'raspi-3' });
 rpio.open(pin, rpio.PWM);
 rpio.pwmSetClockDivider(clockDivider);
 rpio.pwmSetRange(pin, range);
