@@ -2,11 +2,11 @@
 // dtoverlay=gpio-no-irq
 
 const rpio = require('rpio');
-const { performance } = require('perf_hooks');
 const { Pins } = require('./pins');
+const { performance } = require('perf_hooks');
 
-const pinLED = Pins.WPi_2_Physical(0);
-const pinButton = Pins.WPi_2_Physical(1);
+const pinLED = Pins.WPi_2_Physical(1);
+const pinButton = Pins.WPi_2_Physical(2);
 
 rpio.init({
 	mapping: 'physical',    /* Use the P1-P40 numbering scheme */
@@ -21,13 +21,13 @@ async function blink() {
 	let stateLED = rpio.LOW;
 	for (var i = 0; i < 5; i++) {
 		/* On for 1 second */
-		stateLED = Pins.FlipState(stateLED);
+		stateLED = Pins.FlipState_RPIO(stateLED);
 		rpio.write(pinLED, stateLED);
 		console.log(`${new Date().toJSON()} - BEEP ${stateLED}`);
 		await Pins.delay(1000);
 
 		/* Off for half a second (500ms) */
-		stateLED = Pins.FlipState(stateLED);
+		stateLED = Pins.FlipState_RPIO(stateLED);
 		rpio.write(pinLED, stateLED);
 		console.log(`${new Date().toJSON()} - BEEP ${stateLED}`);
 		await Pins.delay(500);
@@ -46,8 +46,9 @@ function tableLamp() {
 		if (now - before < captureTime) {
 			// Detected the button down multiple times, probably because of noise in the button
 		} else {
-			stateLED = Pins.FlipState(stateLED);
+			stateLED = Pins.FlipState_RPIO(stateLED);
 			rpio.write(pinLED, stateLED);
+			console.log(`${new Date().toJSON()} - Lamp ${stateLED}`);
 		}
 		before = now;
 	}, rpio.POLL_LOW)
