@@ -134,17 +134,21 @@ const fullMelody = [
 // SONG-END
 
 function playMelody(song, typicalNoteLength, tempo, newNoteLength) {
-    song.forEach(songLine => {
-        playLine(songLine, typicalNoteLength, tempo, newNoteLength);
+    return new Promise((resolve, reject) => {
+        song.forEach(async songLine => {
+            await playLine(songLine, typicalNoteLength, tempo, newNoteLength);
+            console.log("LINE");
+        })
+        resolve();
     })
 }
 
-function playLine(songLine, typicalNoteLength, tempo, newNoteLength) {
+async function playLine(songLine, typicalNoteLength, tempo, newNoteLength) {
     // Remove whitespaces
     // let lineNotes = removeWhiteSpace(songLine);
     let lineNotes = songLine.replace(/ +/g, '');
 
-    for (let i = 0; i < lineNotes.length(); i += 2) {
+    for (let i = 0; i < lineNotes.length; i += 2) {
         //get the current note to be played
         let noteLetter = lineNotes[i];
 
@@ -178,8 +182,7 @@ function playLine(songLine, typicalNoteLength, tempo, newNoteLength) {
             //Calculate the notes length in milliseconds (for typical note lengths)
             noteLengthMs = noteLengthToMs(typicalNoteLength, tempo);
         }
-
-        playNote(noteLetter, noteOctaveNum, noteLengthMs);
+        await playNote(noteLetter, noteOctaveNum, noteLengthMs);
     }
 }
 
@@ -198,22 +201,22 @@ function noteLengthToMs(noteLen, tempo) {
 async function playNote(note, noteOctaveNum, noteLengthMs) {
     if (note == '-') {
         //Play nothing
-        delay(noteLengthMs);
+        await delay(noteLengthMs);
     } else {
         let freq = notes[`${note}${noteOctaveNum}`];
-        playFreq(freq, noteLengthMs);
+        await playFreq(freq, noteLengthMs);
     }
 }
 
 function delay(ms) {
     new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, ms);
+        let stop = performance.now() + ms;
+        while (performance.now() < stop) { }
+        resolve();
     })
 }
 
-
+let i = 0;
 async function playFreq(freqHz, durationMs) {
     //     //Calculate the period in microseconds
     //     let periodMs = ((1 / freqHz) * 1000);
@@ -229,7 +232,7 @@ async function playFreq(freqHz, durationMs) {
     //         output.digitalWrite(0);
     //         await delay(halfPeriod);
     //     }
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const micros = 1000 * 1000 / freqHz;
         const dc = Math.floor(Math.round(micros / 2));
 
@@ -243,31 +246,17 @@ async function playFreq(freqHz, durationMs) {
         let waveId = pigpio.waveCreate();
         if (waveId >= 0) {
             pigpio.waveTxSend(waveId, pigpio.WAVE_MODE_REPEAT_SYNC);
-            setTimeout(() => {
-                pigpio.waveTxStop();
-                pigpio.waveDelete(waveId);
-                output.digitalWrite(0);
-                resolve();
-            }, durationMs);
+            await delay(durationMs);
+            pigpio.waveTxStop();
+            // pigpio.waveDelete(waveId);
+            output.digitalWrite(0);
         } else {
-            reject();
             throw new Error("Error creating wave")
         }
     })
 }
 
-async function test2() {
-    while (true) {
-        await playFreq(400, 500);
-        await playFreq(1000, 250);
-    }
-
-}
-
-test2();
-
-
-
-
-
-
+setTimeout(async () => {
+    await playMelody(fullMelody, typicalNoteLength, tempo, newNoteLength);
+    console.log("DONE");
+}, 100);
