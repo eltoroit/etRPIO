@@ -28,16 +28,13 @@ async function blink() {
 
 // Now use the button to make a "table lamp"
 function handleButton() {
-    let stateBuzzer = Pins.PIGPIO.LOW;
     button.glitchFilter(10000); // Level changes on the GPIO are not reported unless the level has been stable for at least steady microseconds
 
     button.on('alert', (level, tick) => {
         if (level === 1) {
-            // Ignore button ups
+            buzzer.digitalWrite(Pins.PIGPIO.LOW);
         } else {
-            stateBuzzer = Pins.FlipState_PIGPIO(stateBuzzer);
-            buzzer.digitalWrite(stateBuzzer);
-            console.log(`${new Date().toJSON()} - Lamp ${stateBuzzer}`);
+            buzzer.digitalWrite(Pins.PIGPIO.HIGH);
         }
     });
 }
