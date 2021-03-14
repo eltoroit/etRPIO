@@ -1,6 +1,5 @@
 const { Pins } = require('./pins');
 const Gpio = require('pigpio').Gpio;
-const { performance } = require('perf_hooks');
 
 const pinBuzzer = Pins.WPi_2_BCM(0);
 const pinButton = Pins.WPi_2_BCM(1);
@@ -28,32 +27,24 @@ async function blink() {
 }
 
 // Now use the button to make a "table lamp"
-function tableLamp() {
+function handleButton() {
     let stateBuzzer = Pins.PIGPIO.LOW;
-    let before = performance.now();
-    const captureTime = 500; // How long must the button be kept down? (milliseconds)
-    button.glitchFilter(10000);
+    button.glitchFilter(10000); // Level changes on the GPIO are not reported unless the level has been stable for at least steady microseconds
 
     button.on('alert', (level, tick) => {
         if (level === 1) {
             // Ignore button ups
         } else {
-            let now = performance.now();
-            if (now - before < captureTime) {
-                // Detected the button down multiple times, probably because of noise in the button
-            } else {
-                stateBuzzer = Pins.FlipState_PIGPIO(stateBuzzer);
-                buzzer.digitalWrite(stateBuzzer);
-                console.log(`${new Date().toJSON()} - Lamp ${stateBuzzer}`);
-            }
-            before = now;
+            stateBuzzer = Pins.FlipState_PIGPIO(stateBuzzer);
+            buzzer.digitalWrite(stateBuzzer);
+            console.log(`${new Date().toJSON()} - Lamp ${stateBuzzer}`);
         }
     });
 }
 
 async function main() {
     await blink();
-    tableLamp();
+    handleButton();
 }
 debugger;
 main();
