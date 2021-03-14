@@ -28,8 +28,7 @@ async function blink() {
 
 // Now use the button to make a "table lamp"
 function handleButton() {
-    button.glitchFilter(10000); // Level changes on the GPIO are not reported unless the level has been stable for at least steady microseconds
-
+    button.glitchFilter(10000); // Level must be stable for 10 ms (10,000 µs) before an alert event is emitted.
     button.on('alert', (level, tick) => {
         if (level === 1) {
             buzzer.digitalWrite(Pins.PIGPIO.LOW);
