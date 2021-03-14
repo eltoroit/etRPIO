@@ -104,14 +104,26 @@ exports.Pins = class Pins {
         this._validateInput(Name);
         return this._validateOutput(Name, PINS.find(pin => pin.Name === Name)).Physical;
     }
+    static Physical_2_Physical(Physical) {
+        this._validateInput(Physical);
+        return this._validateOutput(Physical, PINS.find(pin => pin.Physical === Physical)).Physical;
+    }
     // To BCM (Used in PigPio)
     static WPi_2_BCM(WPi) {
         this._validateInput(WPi);
         return this._validateOutput(WPi, PINS.find(pin => pin.WPi === WPi)).BCM;
     }
+    static BCM_2_BCM(BCM) {
+        this._validateInput(BCM);
+        return this._validateOutput(BCM, PINS.find(pin => pin.BCM === BCM)).BCM;
+    }
     static Name_2_BCM(Name) {
         this._validateInput(Name);
         return this._validateOutput(Name, PINS.find(pin => pin.Name === Name)).BCM;
+    }
+    static Physical_2_BCM(Physical) {
+        this._validateInput(Physical);
+        return this._validateOutput(Physical, PINS.find(pin => pin.Physical === Physical)).BCM;
     }
 
     static delay(ms) {
