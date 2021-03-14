@@ -134,56 +134,46 @@ const fullMelody = [
 // SONG-END
 
 function playMelody(song, typicalNoteLength, tempo, newNoteLength) {
+    // console.log("Play Melody");
     return new Promise((resolve, reject) => {
         song.forEach(async songLine => {
             await playLine(songLine, typicalNoteLength, tempo, newNoteLength);
-            console.log("LINE");
         })
         resolve();
-    })
+    });
 }
 
-async function playLine(songLine, typicalNoteLength, tempo, newNoteLength) {
-    // Remove whitespaces
-    // let lineNotes = removeWhiteSpace(songLine);
-    let lineNotes = songLine.replace(/ +/g, '');
+function playLine(songLine, typicalNoteLength, tempo, newNoteLength) {
+    // console.log("Play Line");
+    return new Promise(async (resolve, reject) => {
+        // Remove whitespaces
+        let lineNotes = songLine.replace(/ +/g, '');
 
-    for (let i = 0; i < lineNotes.length; i += 2) {
-        //get the current note to be played
-        let noteLetter = lineNotes[i];
+        for (let i = 0; i < lineNotes.length; i += 2) {
+            let noteLengthMs;
 
-        //get octave number of note to be played
-        let noteNum = lineNotes[i + 1];
+            //get the current note to be played
+            let noteLetter = lineNotes[i];
+            let noteNum = lineNotes[i + 1];
 
-        //convert noteDigit from char to int so it can be used as an  array index
-        // let noteOctaveNum = charToDigit(noteNum);
-        let noteOctaveNum = noteNum === `=` ? 0 : noteNum;
+            //Check to see if the typical note length or a modified note length should be used to play the next note
+            if (noteLetter === '!') {
+                //use modified note length
+                noteLengthMs = noteLengthToMs(newNoteLength[noteNum], tempo);
 
-        let noteLengthMs;
+                i += 2;//increment index to grab the note following the "!0" length modifier
+                noteLetter = lineNotes[i];
 
-        //Check to see if the typical note length or a modified note length should be used to play the next note
-        if (noteLetter === '!') {
-            //use modified note length 
-
-            //Calculate the notes length in milliseconds (for modified note lengths)
-            noteLengthMs = noteLengthToMs(newNoteLength[noteOctaveNum], tempo);
-
-            i += 2;//increment index to grab the note following the "!0" length modifier
-            noteLetter = lineNotes[i];
-
-            //get octave number of note to be played after "!0" length modifier
-            noteNum = lineNotes[i + 1];
-            //convert noteDigit from char to int so it can be used as an  array index
-            // noteOctaveNum = charToDigit(noteNum);
-            noteOctaveNum = noteNum === `=` ? 0 : noteNum;
+                //get octave number of note to be played after "!0" length modifier
+                noteNum = lineNotes[i + 1];
+            } else {
+                //use typical note length 
+                noteLengthMs = noteLengthToMs(typicalNoteLength, tempo);
+            }
+            await playNote(noteLetter, noteNum, noteLengthMs);
         }
-        else//use typical note length 
-        {
-            //Calculate the notes length in milliseconds (for typical note lengths)
-            noteLengthMs = noteLengthToMs(typicalNoteLength, tempo);
-        }
-        await playNote(noteLetter, noteOctaveNum, noteLengthMs);
-    }
+        resolve();
+    });
 }
 
 /* Converts tempo based note length (full note, 1/2 note, 1/4 note ect..) to the notes play length in milliseconds */
@@ -198,14 +188,17 @@ function noteLengthToMs(noteLen, tempo) {
     return wholeNoteMs * noteLen;
 }
 
-async function playNote(note, noteOctaveNum, noteLengthMs) {
-    if (note == '-') {
-        //Play nothing
-        await delay(noteLengthMs);
-    } else {
-        let freq = notes[`${note}${noteOctaveNum}`];
-        await playFreq(freq, noteLengthMs);
-    }
+async function playNote(noteLetter, noteNum, noteLengthMs) {
+    // console.log("Play Note");
+    return new Promise(async (resolve, reject) => {
+        if (noteLetter == '-') {
+            //Play nothing
+            await delay(noteLengthMs);
+        } else {
+            await playFreq(notes[`${noteLetter}${noteNum}`], noteLengthMs);
+        }
+        resolve();
+    });
 }
 
 function delay(ms) {
@@ -218,20 +211,7 @@ function delay(ms) {
 
 let i = 0;
 async function playFreq(freqHz, durationMs) {
-    //     //Calculate the period in microseconds
-    //     let periodMs = ((1 / freqHz) * 1000);
-    //     let halfPeriod = periodMs / 2;
-
-    //     //store start time
-    //     let startTime = performance.now();
-
-    //     //(millis() - startTime) is elapsed play time
-    //     while ((performance.now() - startTime) < durationMs) {
-    //         output.digitalWrite(1);
-    //         await delay(halfPeriod);
-    //         output.digitalWrite(0);
-    //         await delay(halfPeriod);
-    //     }
+    // console.log("Make Noise");
     return new Promise(async (resolve, reject) => {
         const micros = 1000 * 1000 / freqHz;
         const dc = Math.floor(Math.round(micros / 2));
@@ -250,7 +230,9 @@ async function playFreq(freqHz, durationMs) {
             pigpio.waveTxStop();
             // pigpio.waveDelete(waveId);
             output.digitalWrite(0);
+            resolve();
         } else {
+            // reject();
             throw new Error("Error creating wave")
         }
     })
