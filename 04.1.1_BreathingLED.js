@@ -35,13 +35,13 @@ let timer = null;
 let factor = Math.floor(range / 100);
 let direction = 1 * factor;
 async function changeLED() {
-    if (data <= 0) {
+    if (data < 0) {
         data = 0 + factor;
         direction = 1 * factor;
         // console.log(`${new Date().toJSON()} >> Breath`);
         await Pins.delay(100);
         // console.log(`${new Date().toJSON()} >> Go UP`);
-    } else if (data >= range) {
+    } else if (data > range) {
         data = range - factor;
         direction = -1 * factor;
         // console.log(`${new Date().toJSON()} >> Breath`);
