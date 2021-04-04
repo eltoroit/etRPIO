@@ -52,13 +52,55 @@ async function changeLED(isReset) {
     }
 }
 
-let oldPR = -1; // Old Photo-resistor
+let oldPR = -1; // Old Photo-resistor value
 async function readPR() {
     let newPR = await readValue(ADS7830_CHANNELS[3]);
     if (oldPR !== newPR) {
         console.log(newPR);
         oldPR = newPR;
     }
+}
+
+// Thermistors (thermal resistors) are temperature dependent variable resistors.
+// PTC (Positive Temperature Coefficient) and NTC (Negative Temperature Coefficient).
+// When the temperature increases, PTC thermistor resistance will increase and NTC thermistor resistance will decrease.
+// https://en.wikipedia.org/wiki/Thermistor (B or β parameter equation)
+// Rt=R*EXP[B*(1/T2 - 1/T1)]
+// For the parameters of the Thermistor, we use : B=3950, R=10k, T1=25.
+let oldTemp = -1; // Old Photo-resistor value
+async function readTemp() {
+    // Voltage divider
+    // R1 (10K) + R2 (Thermistor)
+    // It = I1 = I2 // Because it's in series
+    // It = V1/R1 = V2/R2
+    // V1*R2 = V2*R1
+    // R2 = V2*R1 / V1
+
+    let VT = 3.3; // 3.3 volts
+    let R1 = 10000; // 10KΩ
+    let value = await readValue(ADS7830_CHANNELS[3]); // 0 - 255 values
+    let V2 = (value / 255.0) * VT; // Value in volts
+    let V1 = VT - V2;
+    let R2 = V2 * R1 / V1; // Resistance for Thermistor
+
+    // Temperature is Kelvin
+    // 1/T = ((1/β) * ln(R2/Rref)) + (1/Tref)
+    // 1/T = (ln(R2/Rref)/β) + (1/Tref)
+    // T = 1 / ((ln(R2/Rref)/β) + (1/Tref))
+    let ZeroC = 273.15; // 0°C = 273.15°K
+    let Rref = 10000;
+    let Tref = ZeroC + 25; // Usually 25°C = (273.15 + 25)°K
+    let Beta = 3950.0;
+    // let TempK = 1 / (1 / (273.15 + 25) + math.log(Rt / 10) / 3950.0);
+    // let TempK = 1 / ((1 / (273.15 + 25)) + (math.log(Rt / 10) / 3950.0));
+    // let TempK = 1 / ((1 / T0) + (math.log(Rt / 10) / 3950.0));
+    let TempK = 1 / ((Math.log(R2 / Rref) / Beta) + (1 / Tref));
+    let tempC = TempK - ZeroC;
+    if (Math.abs(oldTemp - tempC) > 0.5) {
+        console.log(`${tempC}°C`);
+        oldTemp = tempC;
+    }
+    return tempC;
 }
 
 async function main() {
@@ -80,8 +122,23 @@ async function main() {
 
     // Loop reading values
     setInterval(async () => {
-        await readPR();
-        await changeLED(false);
+        // await readPR();
+        let tempC = await readTemp();
+
+        // Controlled by the temperature
+        await LED.RED.pwmWrite(0);
+        await LED.GREEN.pwmWrite(0);
+        await LED.BLUE.pwmWrite(0);
+        if (tempC > 20) {
+            await LED.RED.pwmWrite(255);
+        } else if (tempC < 10) {
+            await LED.BLUE.pwmWrite(255);
+        } else {
+            await LED.GREEN.pwmWrite(255);
+        }
+
+        // Controlled by the potentiometers
+        // await changeLED(false);
     }, 20);
     // rpio.i2cEnd();
 }
